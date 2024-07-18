@@ -1,7 +1,9 @@
 
 # Calculator
 
-Create a calculator that supports `+`, `-`, `*`, `/` operators on numbers and parenthesised expressions. (Hint: Use shunting-yard + stack. Or an assembly-syntax-tree. Look these up. Research and build a solution. : ) )
+Create a calculator that supports `+`, `-`, `*`, `/` operators on numbers and parenthesised expressions.
+
+(Hint: Use shunting-yard + stack. Or an assembly-syntax-tree. Look these up. Research and build your solution.)
 
 ## Places to test your solution
 - [Basic Calculator II - Leetcode](https://leetcode.com/problems/basic-calculator-ii/)
