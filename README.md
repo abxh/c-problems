@@ -1,1 +1,1 @@
-# dsa-problems-in-c
+# c-problems
