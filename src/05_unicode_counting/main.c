@@ -129,7 +129,7 @@ int main(void) {
             size_t tmpi;
             fqueue_for_each(que_ptr, tmpi, key) {
                 uint32_t ht_key = utf8_get_differing_bits((unsigned char*)key);
-                printf("%s (U+%x): %d\n", key, ht_key,  ucharht_get_value(ht_ptr, ht_key, -1));
+                printf("%s (U+%X): %d\n", key, ht_key,  ucharht_get_value(ht_ptr, ht_key, -1));
             }
         }
 
