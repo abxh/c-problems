@@ -35,7 +35,7 @@ size_t utf8_num_of_bytes(const unsigned char* s) {
     assert(false);
 }
 
-uint32_t utf8_normalize(const unsigned char* s) {
+uint32_t utf8_get_differing_bits(const unsigned char* s) {
     if (s[0] >> 7 == 0) {
         return (uint32_t)s[0];
     }
@@ -110,17 +110,17 @@ int main(void) {
             memcpy(str, &line.buf[i], n);
             str[n] = '\0';
 
-            uint32_t normalized_utf8 = utf8_normalize((unsigned char*)&line.buf[i]);
+            uint32_t differing_bits_utf8 = utf8_get_differing_bits((unsigned char*)&line.buf[i]);
 
-            if (!ucharht_contains_key(ht_ptr, normalized_utf8)) {
+            if (!ucharht_contains_key(ht_ptr, differing_bits_utf8)) {
                 if (ucharht_is_full(ht_ptr)) {
                     fprintf(stderr, "line too long. sorry.\n");
                     goto reset;
                 }
-                ucharht_insert(ht_ptr, normalized_utf8, 1);
+                ucharht_insert(ht_ptr, differing_bits_utf8, 1);
                 ucharque_enqueue(que_ptr, str);
             } else {
-                (*ucharht_get_value_mut(ht_ptr, normalized_utf8))++;
+                (*ucharht_get_value_mut(ht_ptr, differing_bits_utf8))++;
             }
         }
 
@@ -128,7 +128,7 @@ int main(void) {
             char* key;
             size_t tmpi;
             fqueue_for_each(que_ptr, tmpi, key) {
-                uint32_t ht_key = utf8_normalize((unsigned char*)key);
+                uint32_t ht_key = utf8_get_differing_bits((unsigned char*)key);
                 printf("%s (U+%x): %d\n", key, ht_key,  ucharht_get_value(ht_ptr, ht_key, -1));
             }
         }
