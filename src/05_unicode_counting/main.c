@@ -8,11 +8,15 @@
 #include "fnvhash.h"
 
 #define NAME ucharht
-#define KEY_TYPE char*
+#define KEY_TYPE uint64_t
 #define VALUE_TYPE unsigned int
-#define KEY_IS_EQUAL(a, b) (strcmp((a), (b)) == 0)
-#define HASH_FUNCTION(key) (fnvhash_32_str(key))
+#define KEY_IS_EQUAL(a, b) ((a) == (b))
+#define HASH_FUNCTION(key) (fnvhash_32((uint8_t*)&key, sizeof(uint64_t)))
 #include "fhashtable.h"
+
+#define NAME ucharque
+#define VALUE_TYPE char*
+#include "fqueue.h"
 
 #include "arena.h"
 
@@ -29,6 +33,32 @@ size_t utf8_num_of_bytes(const unsigned char* s) {
         return 4;
     }
     assert(false);
+}
+
+uint32_t utf8_normalize(const unsigned char* s) {
+    if (s[0] >> 7 == 0) {
+        return (uint32_t)s[0];
+    }
+    uint32_t retval;
+    int n;
+    if ((*s >> 5) == 0b110) {
+        retval = s[0] & 0b00011111;
+        n = 2;
+    } else if ((*s >> 4) == 0b1110) {
+        retval = s[0] & 0b00001111;
+        n = 3;
+    } else if ((*s >> 3) == 0b11110) {
+        retval = s[0] & 0b00000111;
+        n = 4;
+    } else {
+        assert(false);
+    }
+    for (int i = 1; i < n; i++) {
+        assert((s[i] >> 6) == 0b10);
+
+        retval |= (s[i] & 0b00111111);
+    }
+    return retval;
 }
 
 int int_max(const int a, const int b) {
@@ -51,6 +81,7 @@ int main(void) {
     arena_init(&arena, lim, arena_buf);
 
     ucharht_type* ht_ptr = ucharht_create(lim);
+    ucharque_type* que_ptr = ucharque_create(lim);
 
     while (line.buf == NULL || !feof(stdin)) {
 
@@ -79,34 +110,36 @@ int main(void) {
             memcpy(str, &line.buf[i], n);
             str[n] = '\0';
 
-            if (!ucharht_contains_key(ht_ptr, str)) {
+            uint32_t normalized_utf8 = utf8_normalize((unsigned char*)&line.buf[i]);
+
+            if (!ucharht_contains_key(ht_ptr, normalized_utf8)) {
                 if (ucharht_is_full(ht_ptr)) {
                     fprintf(stderr, "line too long. sorry.\n");
                     goto reset;
                 }
-                ucharht_insert(ht_ptr, str, 1);
+                ucharht_insert(ht_ptr, normalized_utf8, 1);
+                ucharque_enqueue(que_ptr, str);
             } else {
-                (*ucharht_get_value_mut(ht_ptr, str))++;
+                (*ucharht_get_value_mut(ht_ptr, normalized_utf8))++;
             }
         }
 
         {
             char* key;
-            size_t value;
             size_t tmpi;
-            fhashtable_for_each(ht_ptr, tmpi, key, value) {
-                if (key[1] != '\0') {
-                    printf("%s: %zu\n", key, value);
-                }
+            fqueue_for_each(que_ptr, tmpi, key) {
+                printf("%s: %d\n", key, ucharht_get_value(ht_ptr, utf8_normalize((unsigned char*)key), -1));
             }
         }
 
     reset:
         arena_deallocate_all(&arena);
         ucharht_clear(ht_ptr);
+        ucharque_clear(que_ptr);
     }
 
     free(line.buf);
     free(arena_buf);
     ucharht_destroy(ht_ptr);
+    ucharque_destroy(que_ptr);
 }
