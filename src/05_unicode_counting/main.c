@@ -16,18 +16,19 @@
 
 #include "arena.h"
 
-size_t utf8_num_of_bytes(const char* s) {
+size_t utf8_num_of_bytes(const unsigned char* s) {
     // https://en.wikipedia.org/wiki/UTF-8#Encoding
 
-    switch (*s & 0b11111000) {
-    case 0b11000000:
+    if ((*s >> 7) == 0b0) {
+        return 1;
+    } else if ((*s >> 5) == 0b110) {
         return 2;
-    case 0b11100000:
+    } else if ((*s >> 4) == 0b1110) {
         return 3;
-    case 0b11110000:
+    } else if ((*s >> 3) == 0b11110) {
         return 4;
     }
-    return 1;
+    assert(false);
 }
 
 int int_max(const int a, const int b) {
@@ -68,7 +69,7 @@ int main(void) {
                 continue;
             }
 
-            n = utf8_num_of_bytes(&line.buf[i]);
+            n = utf8_num_of_bytes((unsigned char*)&line.buf[i]);
 
             char* str = arena_allocate(&arena, n + 1);
             if (!str) {
