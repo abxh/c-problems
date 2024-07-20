@@ -42,13 +42,13 @@ uint32_t utf8_normalize(const unsigned char* s) {
     uint32_t retval;
     int n;
     if ((*s >> 5) == 0b110) {
-        retval = s[0] & 0b00011111;
+        retval = (s[0] & 0b00011111) << 6;
         n = 2;
     } else if ((*s >> 4) == 0b1110) {
-        retval = s[0] & 0b00001111;
+        retval = (s[0] & 0b00001111) << 12;
         n = 3;
     } else if ((*s >> 3) == 0b11110) {
-        retval = s[0] & 0b00000111;
+        retval = (s[0] & 0b00000111) << 18;
         n = 4;
     } else {
         assert(false);
@@ -56,7 +56,7 @@ uint32_t utf8_normalize(const unsigned char* s) {
     for (int i = 1; i < n; i++) {
         assert((s[i] >> 6) == 0b10);
 
-        retval |= (s[i] & 0b00111111);
+        retval |= (s[i] & 0b00111111) << ((n - 1 - i) * 6);
     }
     return retval;
 }
@@ -128,7 +128,8 @@ int main(void) {
             char* key;
             size_t tmpi;
             fqueue_for_each(que_ptr, tmpi, key) {
-                printf("%s: %d\n", key, ucharht_get_value(ht_ptr, utf8_normalize((unsigned char*)key), -1));
+                uint32_t ht_key = utf8_normalize((unsigned char*)key);
+                printf("%s (U+%x): %d\n", key, ht_key,  ucharht_get_value(ht_ptr, ht_key, -1));
             }
         }
 
