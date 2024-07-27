@@ -5,18 +5,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fnvhash.h"
-
 #define NAME ucharht
-#define KEY_TYPE uint64_t
+#define KEY_TYPE char*
 #define VALUE_TYPE unsigned int
-#define KEY_IS_EQUAL(a, b) ((a) == (b))
-#define HASH_FUNCTION(key) (fnvhash_32((uint8_t*)&key, sizeof(uint64_t)))
+#define KEY_IS_EQUAL(a, b) (strcmp((a), (b)) == 0)
+#define HASH_FUNCTION(key) (fnvhash_32_str(key))
 #include "fhashtable.h"
 
-#define NAME ucharque
+#define NAME ucharpque
 #define VALUE_TYPE char*
-#include "fqueue.h"
+#include "fpqueue.h"
 
 #include "arena.h"
 
@@ -81,7 +79,7 @@ int main(void) {
     arena_init(&arena, lim, arena_buf);
 
     ucharht_type* ht_ptr = ucharht_create(lim);
-    ucharque_type* que_ptr = ucharque_create(lim);
+    ucharpque_type* pque_ptr = ucharpque_create(lim);
 
     while (line.buf == NULL || !feof(stdin)) {
 
@@ -110,37 +108,40 @@ int main(void) {
             memcpy(str, &line.buf[i], n);
             str[n] = '\0';
 
-            uint32_t differing_bits_utf8 = utf8_get_differing_bits((unsigned char*)&line.buf[i]);
-
-            if (!ucharht_contains_key(ht_ptr, differing_bits_utf8)) {
+            if (!ucharht_contains_key(ht_ptr, str)) {
                 if (ucharht_is_full(ht_ptr)) {
                     fprintf(stderr, "line too long. sorry.\n");
                     goto reset;
                 }
-                ucharht_insert(ht_ptr, differing_bits_utf8, 1);
-                ucharque_enqueue(que_ptr, str);
+                ucharht_insert(ht_ptr, str, 1);
             } else {
-                (*ucharht_get_value_mut(ht_ptr, differing_bits_utf8))++;
+                (*ucharht_get_value_mut(ht_ptr, str))++;
             }
         }
 
         {
+            size_t tempi;
             char* key;
-            size_t tmpi;
-            fqueue_for_each(que_ptr, tmpi, key) {
-                uint32_t ht_key = utf8_get_differing_bits((unsigned char*)key);
-                printf("%s (U+%X): %d\n", key, ht_key,  ucharht_get_value(ht_ptr, ht_key, -1));
+            unsigned int value;
+            fhashtable_for_each(ht_ptr, tempi, key, value) {
+                ucharpque_push(pque_ptr, key, value);
             }
+        }
+
+        while (!ucharpque_is_empty(pque_ptr)) {
+            const char* key = ucharpque_pop_max(pque_ptr);
+            const uint32_t differing_bits = utf8_get_differing_bits((unsigned char*)key);
+
+            printf("%s (U+%X): %d\n", key, differing_bits, ucharht_get_value(ht_ptr, key, -1));
         }
 
     reset:
         arena_deallocate_all(&arena);
         ucharht_clear(ht_ptr);
-        ucharque_clear(que_ptr);
     }
 
     free(line.buf);
     free(arena_buf);
     ucharht_destroy(ht_ptr);
-    ucharque_destroy(que_ptr);
+    ucharpque_destroy(pque_ptr);
 }
