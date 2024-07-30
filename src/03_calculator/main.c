@@ -234,7 +234,7 @@ double eval(char* str, ssize_t len) {
             continue;
         default:
             error_msg = "Unknown character.";
-            error_index = i;
+            error_index = i + 2;
             goto on_inp_error;
         }
     }
