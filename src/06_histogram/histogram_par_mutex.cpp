@@ -1,8 +1,8 @@
 #include "histogram.h"
 
-#include <algorithm>
 #include <cstdint>
-#include <cstdlib>
+
+#include <algorithm>
 #include <iostream>
 #include <mutex>
 #include <thread>
@@ -69,9 +69,9 @@ extern "C" void histogram_par_mutex(const size_t k, size_t* bins, const size_t n
         histogram_par_mutex_cpp(k, bins, n, is);
     } catch (std::exception& e) {
         std::cerr << "error: " << e.what() << "\n";
-        abort();
+        std::abort();
     } catch (...) {
         std::cerr << "error occurred.\n";
-        abort();
+        std::abort();
     }
 }
