@@ -34,7 +34,7 @@ void histogram_par_mutex_cpp(const size_t k, size_t* bins, const size_t n, const
         }
     }
     {
-        std::vector<std::mutex> bin_locks(num_cores);
+        std::vector<std::mutex> bin_locks(k);
 
         const size_t chunk_size = num_cores;
 
@@ -46,11 +46,11 @@ void histogram_par_mutex_cpp(const size_t k, size_t* bins, const size_t n, const
                 const int index = is[i]; // read from read-only array
 
                 if (0 <= index && index < (int64_t)std::min<size_t>(INT64_MAX, k)) {
-                    bin_locks[id].lock();
+                    bin_locks[index].lock();
                     const size_t x_old = bins[index];
                     const size_t x_new = x_old + 1;
                     bins[index] = x_new;
-                    bin_locks[id].unlock();
+                    bin_locks[index].unlock();
                 }
             }
         };
