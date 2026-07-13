@@ -1,4 +1,4 @@
-# count_alnum
+# record_alnum
 
 This problem is based on K&R chapter 1 with an constraint not directly related to the chapter.
 
