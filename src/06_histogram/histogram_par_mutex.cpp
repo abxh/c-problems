@@ -34,7 +34,7 @@ void histogram_par_mutex_cpp(const size_t k, size_t* bins, const size_t n, const
         }
     }
     {
-        std::vector<std::mutex> bin_locks(k);
+        std::vector<std::mutex> bin_locks(num_cores);
 
         const size_t chunk_size = num_cores;
 
