@@ -1,12 +1,10 @@
 EXEC_NAME := a.out
 
 CC         := gcc
-CFLAGS     += -I./../../lib
 CFLAGS     += -Wall -Wextra -pedantic
 CFLAGS     += -ggdb3
 CFLAGS     += -fsanitize=undefined
 CFLAGS     += -fsanitize=address
-CFLAGS     += -I./../../data-structures-c/lib
 
 C_FILES     := $(wildcard *.c)
 OBJ_FILES   := $(C_FILES:.c=.o)
