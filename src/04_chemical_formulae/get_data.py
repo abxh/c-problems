@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 
 import pandas as pd
+import requests
 
-df = pd.read_html("https://en.wikipedia.org/wiki/Glossary_of_chemical_formulae")
+url = "https://en.wikipedia.org/wiki/Glossary_of_chemical_formulae"
+
+headers = {
+    "User-Agent": "Mozilla/5.0"
+}
+
+html = requests.get(url, headers=headers).text
+df = pd.read_html(html)
 
 l = []
 for i in range(len(df)):

@@ -4,19 +4,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
+
+#include "fnvhash.h"
 
 #define NAME ucharht
 #define KEY_TYPE char*
 #define VALUE_TYPE unsigned int
 #define KEY_IS_EQUAL(a, b) (strcmp((a), (b)) == 0)
 #define HASH_FUNCTION(key) (fnvhash_32_str(key))
-#include "fhashtable.h"
+#define TYPE_DEFINITIONS
+#define FUNCTION_DEFINITIONS
+#define FUNCTION_LINKAGE static inline
+#include "fhashtable_template.h"
 
 #define NAME ucharpque
 #define VALUE_TYPE char*
-#include "fpqueue.h"
+#define TYPE_DEFINITIONS
+#define FUNCTION_DEFINITIONS
+#define FUNCTION_LINKAGE static inline
+#include "fpqueue_template.h"
 
-#include "arena.h"
+#define NAME arena
+#define TYPE_DEFINITIONS
+#define FUNCTION_DEFINITIONS
+#define FUNCTION_LINKAGE static inline
+#include "arena_template.h"
 
 size_t utf8_num_of_bytes(const unsigned char* s) {
     // https://en.wikipedia.org/wiki/UTF-8#Encoding
@@ -75,11 +88,11 @@ int main(void) {
     struct line_info_type line = {.buf = NULL};
 
     unsigned char* arena_buf = malloc(lim);
-    arena_type arena;
+    struct arena arena;
     arena_init(&arena, lim, arena_buf);
 
-    ucharht_type* ht_ptr = ucharht_create(lim);
-    ucharpque_type* pque_ptr = ucharpque_create(lim);
+    struct ucharht* ht_ptr = ucharht_create(lim);
+    struct ucharpque* pque_ptr = ucharpque_create(lim);
 
     while (line.buf == NULL || !feof(stdin)) {
 
@@ -123,7 +136,7 @@ int main(void) {
             size_t tempi;
             char* key;
             unsigned int value;
-            fhashtable_for_each(ht_ptr, tempi, key, value) {
+            FHASHTABLE_FOR_EACH(ht_ptr, tempi, key, value) {
                 ucharpque_push(pque_ptr, key, value);
             }
         }

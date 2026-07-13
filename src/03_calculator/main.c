@@ -18,11 +18,17 @@ typedef struct {
 
 #define NAME lex_queue
 #define VALUE_TYPE lexeme_type
-#include "fqueue.h"
+#define TYPE_DEFINITIONS
+#define FUNCTION_DEFINITIONS
+#define FUNCTION_LINKAGE static inline
+#include "fqueue_template.h"
 
 #define NAME lex_stack
 #define VALUE_TYPE lexeme_type
-#include "fstack.h"
+#define TYPE_DEFINITIONS
+#define FUNCTION_DEFINITIONS
+#define FUNCTION_LINKAGE static inline
+#include "fstack_template.h"
 
 char decode_op(operation_type op) {
     switch (op) {
@@ -79,10 +85,10 @@ double eval(char* str, ssize_t len) {
         return RTR_VALUE_DEFAULT;
     }
     double rtr_value = RTR_VALUE_DEFAULT;
-    lex_queue_type* inp_queue = NULL;
-    lex_queue_type* inp_queue_postfix = NULL;
-    lex_stack_type* op_stack = NULL;
-    lex_stack_type* num_stack = NULL;
+    struct lex_queue* inp_queue = NULL;
+    struct lex_queue* inp_queue_postfix = NULL;
+    struct lex_stack* op_stack = NULL;
+    struct lex_stack* num_stack = NULL;
 
     inp_queue = lex_queue_create(len);
     if (!inp_queue) {
@@ -285,7 +291,7 @@ double eval(char* str, ssize_t len) {
     {
         size_t index;
         lexeme_type lex;
-        fqueue_for_each(inp_queue, index, lex) {
+        FQUEUE_FOR_EACH(inp_queue, index, lex) {
             switch (lex.token) {
             case NUMBER_TOKEN:
                 lex_queue_enqueue(inp_queue_postfix, lex);
@@ -343,7 +349,7 @@ double eval(char* str, ssize_t len) {
         size_t i;
         lexeme_type lex;
         num_stack = op_stack; // repurposing the stack
-        fqueue_for_each(inp_queue_postfix, i, lex) {
+        FQUEUE_FOR_EACH(inp_queue_postfix, i, lex) {
             switch (lex.token) {
             case NUMBER_TOKEN:
                 lex_stack_push(num_stack, lex);

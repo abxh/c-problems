@@ -66,7 +66,10 @@ static SYMBOL_ENUM matching_symbol(SYMBOL_ENUM symb) {
 
 #define NAME symb_stack
 #define VALUE_TYPE SYMBOL_ENUM
-#include "fstack.h" // symb_stack_*, stack_for_each
+#define TYPE_DEFINITIONS
+#define FUNCTION_DEFINITIONS
+#define FUNCTION_LINKAGE static inline
+#include "fstack_template.h" // symb_stack_*, stack_for_each
 
 int main(void) {
     puts("Input line:");
@@ -78,7 +81,7 @@ int main(void) {
         return 1;
     }
 
-    symb_stack_type* stack_p = symb_stack_create((size_t)n);
+    struct symb_stack* stack_p = symb_stack_create((size_t)n);
     if (!stack_p) {
         free(str);
         return 1;
