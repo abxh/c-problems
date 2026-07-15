@@ -8,9 +8,9 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
-void histogram_seq(const size_t k, size_t* bins, const size_t n, const int64_t* is);
+void histogram_seq(const size_t k, uint64_t* bins, const size_t n, const int64_t* is);
 
-void histogram_par_mutex(const size_t k, size_t* bins, const size_t n, const int64_t* is);
+void histogram_par_mutex(const size_t k, uint64_t* bins, const size_t n, const int64_t* is);
 
 #ifdef __cplusplus
 }
