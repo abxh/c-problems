@@ -9,7 +9,7 @@ int main(void) {
     size_t k = 3;
     uint64_t* bins = malloc(3 * sizeof(uint64_t));
 
-    histogram_par_mutex(k, bins, sizeof(is) / sizeof(*is), is);
+    histogram_par_atomic(k, bins, sizeof(is) / sizeof(*is), is);
 
     printf("[");
     for (size_t i = 0; i < k; i++) {

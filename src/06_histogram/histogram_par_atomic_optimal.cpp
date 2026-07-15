@@ -1,19 +1,24 @@
 #include "histogram.h"
 
+#include <atomic>
 #include <cstdint>
 
 #include <algorithm>
 #include <iostream>
-#include <mutex>
 #include <thread>
 #include <vector>
 
-static void histogram_par_mutex_cpp(const size_t num_bins, uint64_t* bins, const size_t num_indices, const int64_t* is) {
+static void histogram_par_atomic_optimal_cpp(const size_t num_bins, uint64_t* bins_out, const size_t num_indices, const int64_t* is) {
+    if (!std::atomic<uint64_t>::is_always_lock_free) {
+        throw std::runtime_error{"uint64 atomic support is not present as desired"};
+    }
 
     const size_t num_cores = std::max(1u, std::thread::hardware_concurrency());
 
     std::vector<std::thread> threads;
     threads.reserve(num_cores);
+
+    std::vector<std::atomic<uint64_t>> bins(num_bins);
 
     {
         const size_t chunk_size = (num_bins + num_cores - 1) / num_cores;
@@ -23,7 +28,7 @@ static void histogram_par_mutex_cpp(const size_t num_bins, uint64_t* bins, const
             const size_t end = std::min(begin + chunk_size, num_bins);
 
             for (size_t i = begin; i < end; i++) {
-                bins[i] = 0;
+                bins[i].store(0, std::memory_order_relaxed);
             }
         };
 
@@ -36,11 +41,9 @@ static void histogram_par_mutex_cpp(const size_t num_bins, uint64_t* bins, const
         threads.clear();
     }
     {
-        std::vector<std::mutex> bin_locks(num_bins);
-
         const size_t chunk_size = (num_indices + num_cores - 1) / num_cores;
 
-        auto const f = [chunk_size, num_indices, num_bins, &bins, &bin_locks, &is](const size_t id) {
+        auto const f = [chunk_size, num_indices, num_bins, &bins, &is](const size_t id) {
             const size_t begin = id * chunk_size;
             const size_t end = std::min(begin + chunk_size, num_indices);
 
@@ -48,12 +51,28 @@ static void histogram_par_mutex_cpp(const size_t num_bins, uint64_t* bins, const
                 const int64_t index = is[i]; // read from read-only array
 
                 if (0 <= index && index < (int64_t)std::min<uint64_t>(INT64_MAX, num_bins)) {
-                    bin_locks[index].lock();
-                    const uint64_t x_old = bins[index];
-                    const uint64_t x_new = x_old + 1;
-                    bins[index] = x_new;
-                    bin_locks[index].unlock();
+                    bins[index].fetch_add(1, std::memory_order_relaxed);
                 }
+            }
+        };
+
+        for (size_t i = 0; i < num_cores; i++) {
+            threads.emplace_back(f, i);
+        }
+        for (size_t i = 0; i < num_cores; i++) {
+            threads[i].join();
+        }
+        threads.clear();
+    }
+    {
+        const size_t chunk_size = (num_bins + num_cores - 1) / num_cores;
+
+        auto const f = [chunk_size, num_bins, &bins, &bins_out](const uint64_t id) {
+            const size_t begin = id * chunk_size;
+            const size_t end = std::min(begin + chunk_size, num_bins);
+
+            for (size_t i = begin; i < end; i++) {
+                bins_out[i] = bins[i].load(std::memory_order_relaxed);
             }
         };
 
@@ -67,9 +86,9 @@ static void histogram_par_mutex_cpp(const size_t num_bins, uint64_t* bins, const
     }
 }
 
-extern "C" void histogram_par_mutex(const size_t k, uint64_t* bins, const size_t n, const int64_t* is) {
+extern "C" void histogram_par_atomic_optimal(const size_t k, uint64_t* bins, const size_t n, const int64_t* is) {
     try {
-        histogram_par_mutex_cpp(k, bins, n, is);
+        histogram_par_atomic_optimal_cpp(k, bins, n, is);
     } catch (std::exception& e) {
         std::cerr << "error: " << e.what() << "\n";
         std::abort();
