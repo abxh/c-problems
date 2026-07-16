@@ -5,12 +5,10 @@ CXX     := g++
 
 CFLAGS  += -Wall -Wextra -pedantic
 CFLAGS  += -ggdb3
-CFLAGS  += -fsanitize=undefined
 CFLAGS  += -fsanitize=thread
 
 CXXFLAGS += $(CFLAGS)
 
-LDFLAGS += -fsanitize=undefined
 LDFLAGS += -fsanitize=thread
 
 C_FILES   := $(wildcard *.c)

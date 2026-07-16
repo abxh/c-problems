@@ -7,9 +7,9 @@ int main(void) {
     const int64_t is[] = {0, 1, 3, 2, 1, 0, 0, 1};
 
     size_t k = 3;
-    uint64_t* bins = malloc(3 * sizeof(uint64_t));
+    uint64_t* bins = malloc(k * sizeof(uint64_t));
 
-    histogram_par_atomic(k, bins, sizeof(is) / sizeof(*is), is);
+    histogram_par_mutex(k, bins, sizeof(is) / sizeof(*is), is);
 
     printf("[");
     for (size_t i = 0; i < k; i++) {

@@ -15,9 +15,7 @@ static void histogram_par_atomic_optimal_cpp(const size_t num_bins, uint64_t* bi
 
     const size_t num_cores = std::max(1u, std::thread::hardware_concurrency());
 
-    std::vector<std::thread> threads;
-    threads.reserve(num_cores);
-
+    std::vector<std::thread> threads(num_cores);
     std::vector<std::atomic<uint64_t>> bins(num_bins);
 
     {
@@ -33,12 +31,11 @@ static void histogram_par_atomic_optimal_cpp(const size_t num_bins, uint64_t* bi
         };
 
         for (size_t i = 0; i < num_cores; i++) {
-            threads.emplace_back(f, i);
+            threads[i] = std::thread(f, i);
         }
         for (size_t i = 0; i < num_cores; i++) {
             threads[i].join();
         }
-        threads.clear();
     }
     {
         const size_t chunk_size = (num_indices + num_cores - 1) / num_cores;
@@ -57,12 +54,11 @@ static void histogram_par_atomic_optimal_cpp(const size_t num_bins, uint64_t* bi
         };
 
         for (size_t i = 0; i < num_cores; i++) {
-            threads.emplace_back(f, i);
+            threads[i] = std::thread(f, i);
         }
         for (size_t i = 0; i < num_cores; i++) {
             threads[i].join();
         }
-        threads.clear();
     }
     {
         const size_t chunk_size = (num_bins + num_cores - 1) / num_cores;
@@ -77,12 +73,11 @@ static void histogram_par_atomic_optimal_cpp(const size_t num_bins, uint64_t* bi
         };
 
         for (size_t i = 0; i < num_cores; i++) {
-            threads.emplace_back(f, i);
+            threads[i] = std::thread(f, i);
         }
         for (size_t i = 0; i < num_cores; i++) {
             threads[i].join();
         }
-        threads.clear();
     }
 }
 
