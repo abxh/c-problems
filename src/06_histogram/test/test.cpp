@@ -12,7 +12,7 @@ int main(void) {
         std::vector<std::int64_t> inds;
         inds.reserve(N);
 
-        std::uniform_int_distribution<std::int64_t> distrib(-1, M);
+        std::uniform_int_distribution<std::int64_t> distrib(-1, M - 1);
         for (std::size_t i = 0; i < N; i++) {
             inds.emplace_back(distrib(gen));
         }
