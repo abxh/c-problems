@@ -2,7 +2,7 @@
 
 **Problem:**
 
-Given a stream of unicode characters (utf8 encoded), enumerate the number of times a character is used.
+Given a stream of unicode characters (utf8 encoded), enumerate the number of times a character is used. Normalization is not required.
 
 **Extra:**
 
